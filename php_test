@@ -1,0 +1,44 @@
+<?php
+/**
+ * Find files in the /datafiles folder with names consisting of numbers and letters of the Latin alphabet, having the .ixt extension.
+ *
+ * This script searches for files in the specified directory that match the criteria and displays their names in alphabetical order.
+ */
+
+// Define the directory path to search for files.
+$directory = '/datafiles';
+
+// Define the regular expression pattern to match filenames with numbers, letters of the Latin alphabet, and the .ixt extension.
+$pattern = '/^[a-zA-Z0-9]+\.ixt$/';
+
+// Initialize an array to store matching file names.
+$matchingFiles = array();
+
+// Check if the directory exists and is readable.
+if (is_dir($directory) && is_readable($directory)) {
+    // Open the directory.
+    if ($dh = opendir($directory)) {
+        // Iterate through the directory to find matching files.
+        while (($filename = readdir($dh)) !== false) {
+            if (preg_match($pattern, $filename)) {
+                $matchingFiles[] = $filename;
+            }
+        }
+
+        // Close the directory handle.
+        closedir($dh);
+
+        // Sort the matching file names alphabetically.
+        sort($matchingFiles);
+
+        // Display the sorted file names.
+        foreach ($matchingFiles as $file) {
+            echo $file . PHP_EOL;
+        }
+    } else {
+        echo "Error opening the directory.";
+    }
+} else {
+    echo "Directory does not exist or is not readable.";
+}
+?>
