@@ -1,0 +1,61 @@
+<?php
+// Database configuration
+$hostname = "localhost";
+$username = "username";
+$password = "";
+$database = "user";
+
+// Connect to the database
+$db = new mysqli($hostname, $username, $password, $database);
+if ($db->connect_error) {
+    die("Database connection failed: " . $db->connect_error);
+}
+
+// URL of the Wikipedia page to download
+$url = 'https://www.wikipedia.org/';
+
+// Download the page content using cURL
+$curl = curl_init($url);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+$pageContent = curl_exec($curl);
+curl_close($curl);
+
+// Check if the download was successful
+if (!$pageContent) {
+    die("Failed to download the page.");
+}
+
+// Create a DOMDocument to parse the HTML content
+$doc = new DOMDocument();
+libxml_use_internal_errors(true); // Suppress HTML errors
+$doc->loadHTML($pageContent);
+libxml_clear_errors();
+
+// Extract and save sections data
+$sections = $doc->getElementsByTagName('section');
+foreach ($sections as $section) {
+    $title = $section->getElementsByTagName('h2')->item(0)->textContent;
+    $abstract = $section->getElementsByTagName('p')->item(0)->textContent;
+    $picture = $section->getElementsByTagName('img')->item(0)->getAttribute('src');
+    
+    // Insert data into the database
+    $dateCreated = date("Y-m-d H:i:s");
+    $url = $url; // The URL of the Wikipedia page
+    $title = $db->real_escape_string($title);
+    $url = $db->real_escape_string($url);
+    $picture = $db->real_escape_string($picture);
+    $abstract = $db->real_escape_string($abstract);
+
+    $query = "INSERT INTO wiki_sections (date_created, title, url, picture, abstract) VALUES ('$dateCreated', '$title', '$url', '$picture', '$abstract')";
+    $result = $db->query($query);
+
+    if (!$result) {
+        echo "Failed to insert data: " . $db->error;
+    }
+}
+
+// Close the database connection
+$db->close();
+
+echo "Data extraction and saving complete.";
+?>
